@@ -39,11 +39,17 @@ Since we defined the entire model, let's move onto how we actually model it:
   Now, let's move onto the part where we craft each of the parameter:
         # N: the length (and the amount of colors) of board
         # N_sq: square root of N
+        
         --- total amount of decision variables is just N^3 ---
+        
         # names: just a regular numpy array with list comprehension
         # types: each variable is binary, we just repeat "B" N^3 times
         # c: it is arbitrary, best to set vector of full zeros or ones
-        # l: instead of initializing
+        # l: instead of initializing it full of zeros, we initialize it as a cube of zeros. that way, we can force the existing values.
+            --> we look up for indices that are not zero with np.argwhere(input_grid != 0). then, we run a for loop for each index, and set the appropiate lower bound as 1. then, we flatten l to convert it into a vector
+        # u: all of the upper bounds are 1
+
+        
 
 
 
