@@ -37,17 +37,38 @@ Since we defined the entire model, let's move onto how we actually model it:
   CPLEX takes all of these arguments and uses them to define the problem and solves it.
 
   Now, let's move onto the part where we craft each of the parameter:
+  
         # N: the length (and the amount of colors) of board
         # N_sq: square root of N
-        
         --- total amount of decision variables is just N^3 ---
-        
         # names: just a regular numpy array with list comprehension
         # types: each variable is binary, we just repeat "B" N^3 times
         # c: it is arbitrary, best to set vector of full zeros or ones
         # l: instead of initializing it full of zeros, we initialize it as a cube of zeros. that way, we can force the existing values.
             --> we look up for indices that are not zero with np.argwhere(input_grid != 0). then, we run a for loop for each index, and set the appropiate lower bound as 1. then, we flatten l to convert it into a vector
         # u: all of the upper bounds are 1
+        
+  At this point, let's take a stop here and analyze how many constraints we will get. In each constraint, we are working with exactly N variables. Since we are working with the full board, we must have N^2 rows for each constraint to cover every decision variable. And since we have exactly 4 constraints, total row count will be 4 * N^2.
+  
+        # b: we just repeat "1" 4*(N^2) times
+        # senses: similarly, we just repeat "E" 4*(N^2) times
+
+  Now, let's take another stop here to observe how A matrix is generated. If you were to generate the matrix in a normal manner, we would have tons of unnecessary zeros, occupying way more memory than it should. So, instead of generating the whole matrix, we generate it as a sparse matrix, which only stores the values with the row and column indices corresponding to that value. This way, we avoid storing unnecessary zeros. This means, we would be needing the every single aij (A_ij, to be more specific), row and column values with the amount of total rows and columns for the matrix. For this example, I will be csr_matrix. Here is how A matrix is defined:
+
+  We know that in each row, we deal with N variables. And since we have 4*(N^2) of them, total amount of 1's required is simply 4*(N^3). So, we initialize repeat "1" 4*(N^3) times for aij vector. Similarly, for row vector, we would be repeating range(4*N^2) N times. 
+
+  And for column indices, we have to handle them separately for each constraint. The best way to figure out how the indices should be placed is messing around in a smaller board and observing the patterns.
+    --> for the first constraint, it is just range(N^3)
+    --> for the second second constraint, we need to be imagine it as swapping the order of indices of x_k_i_j. We need x_k_j_i, so we take a np.arange(N^3) vector, reshape it to be a NxNxN cube, swap the axes 1 and 2 (in our case, i and j), then flatten it back to a vector
+    --> for the third constraint, we need x_i_j_k. to understand what happens here, let's analyze another arbitrary (although not related) example:
+            # consider y_i_j with Y as the matrix y_i_j belongs. if we were to transpose Y, to find the original y_i_j, we would be looking at y_j_i.
+        we will use a similar approach, instead, we think x_k_i_j as x_k_(i_j). What we need to do is create a matrix with dimensions k and ixj (abuse of notation), and then transpose it so that we have a matrix with ixj and k, resulting with the order we want: x_i_j_k. that is what we are going to do here. we take a np.arange(N^3) vector, reshape it to a matrix with NxN^2 dimensions, transpose it and flatten it back to a vector. this gives us the desired order.
+    --> for the last constraint, it is way more complex here to explain, but what we do here is take a np.arange(N^3) vector, reshape it into a 5-D array via .reshape(N, N_sq, N_sq, N_sq, N_sq), then swap the axes 2 and 3, and flatten it back to a vector. I **highly** recommend for you to experiment with this yourself. take a np.arange(64) vector, reshape it with .reshape(4, 2, 2, 2, 2) and experiment over there.
+
+  With all of the column indices generated, we combine every piece to a one large vector.
+
+  Now that we have all of the components ready for A matrix, we generate it with A = sp.csr_matrix((aij, (row, col)), shape = (4*(N^2), N^3)) command, and then pass every parameter to our mixed_integer_linear_programming function. With that being done, we essentially modeled a sudoku problem that works for every board with N^2 size!
+    
 
         
 
