@@ -58,6 +58,7 @@ Since we defined the entire model, let's move onto how we actually model it:
   We know that in each row, we deal with N variables. And since we have 4*(N^2) of them, total amount of 1's required is simply 4*(N^3). So, we initialize repeat "1" 4*(N^3) times for aij vector. Similarly, for row vector, we would be repeating range(4*N^2) N times. 
 
   And for column indices, we have to handle them separately for each constraint. The best way to figure out how the indices should be placed is messing around in a smaller board and observing the patterns.
+    
     --> for the first constraint, it is just range(N^3)
     --> for the second second constraint, we need to be imagine it as swapping the order of indices of x_k_i_j. We need x_k_j_i, so we take a np.arange(N^3) vector, reshape it to be a NxNxN cube, swap the axes 1 and 2 (in our case, i and j), then flatten it back to a vector
     --> for the third constraint, we need x_i_j_k. to understand what happens here, let's analyze another arbitrary (although not related) example:
