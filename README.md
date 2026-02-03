@@ -1,4 +1,4 @@
-This script takes a sudoku problem and prints the end result.
+This script takes a sudoku problem, models it as an integer programming model, solves it and prints the end result.
 
 How it works:
 
