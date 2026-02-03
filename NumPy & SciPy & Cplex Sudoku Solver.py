@@ -62,10 +62,9 @@ def sudoku_with_grid(input_grid):
     c = np.repeat(1, N**3)
     l = np.zeros((N, N, N))
     u = np.repeat(1, N**3)
-    for y in range(N):
-        for x in range(N):
-            if input_grid[y][x] != 0:
-                l[input_grid[y][x] - 1][y][x] = 1
+    
+    for y, x in np.argwhere(input_grid != 0):
+        l[input_grid[y][x] - 1][y][x] = 1
     l = l.flatten()
 
     b = np.repeat(1, 4 * N**2)
